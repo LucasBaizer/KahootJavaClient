@@ -24,6 +24,7 @@ public class KahootWebSocket extends WebSocketListener {
 	private Request request;
 	private JSONObject system;
 	private int nonce = 0;
+	private final int waitTime = 500;
 
 	public KahootWebSocket(KahootClient client) throws IOException {
 		this.client = client;
@@ -50,7 +51,7 @@ public class KahootWebSocket extends WebSocketListener {
 		if (obj.has("successful")) {
 			if (!obj.getBoolean("successful")) {
 				debug("A call was not successful, aborting.");
-				webSocketClient.dispatcher().executorService().shutdown();
+				abort();
 			}
 		}
 		int id = obj.has("id") ? Integer.parseInt(obj.getString("id")) : -1;
@@ -58,27 +59,40 @@ public class KahootWebSocket extends WebSocketListener {
 			client.setClientID(obj.getString("clientId"));
 			debug("Client ID: " + client.getClientID());
 
-			subscribe(socket, "player");
-			subscribe(socket, "controller");
-			subscribe(socket, "status");
+			Thread sendThread = new Thread(() -> {
+				subscribe(socket, "player");
+				subscribe(socket, "controller");
+				subscribe(socket, "status");
 
-			socket.send(wrap("connect"));
+				wait(waitTime);
 
-			unsubscribe(socket, "player");
-			unsubscribe(socket, "controller");
-			unsubscribe(socket, "status");
+				socket.send(wrap("connect"));
 
-			subscribe(socket, "player"); // yes, this happens twice. no, I don't know why.
-			subscribe(socket, "controller");
-			subscribe(socket, "status");
+				wait(waitTime);
 
-			socket.send(wrap("connect"));
+				unsubscribe(socket, "player");
+				unsubscribe(socket, "controller");
+				unsubscribe(socket, "status");
 
-			socket.send(wrap("login", "data.gameid", client.getLobby(), "data.name", client.getUsername())); // the fun part: get in!
+				wait(waitTime);
 
-			// TODO: there's a part of the connection which we're not receiving here. fix this tomorrow!
+				subscribe(socket, "player"); // yes, this happens twice. no, I don't know why.
+				subscribe(socket, "controller");
+				subscribe(socket, "status");
 
-			socket.send(wrap("connect", "ack", 2));
+				wait(waitTime);
+
+				socket.send(wrap("connect"));
+
+				wait(waitTime);
+
+				socket.send(wrap("login", "data.gameid", client.getLobby(), "data.name", client.getUsername())); // the fun part: get in!
+
+				wait(waitTime);
+
+				socket.send(wrap("connect", "ack", 2));
+			});
+			sendThread.start();
 		}
 		if (id == 13 && obj.getString("channel").equals("/service/controller")) { // finished login
 			Thread refresh = new Thread(() -> {
@@ -91,6 +105,7 @@ public class KahootWebSocket extends WebSocketListener {
 					}
 				} catch (InterruptedException e) {
 					debug("Refresh thread interrupted!");
+					abort();
 					return;
 				}
 			});
@@ -107,6 +122,20 @@ public class KahootWebSocket extends WebSocketListener {
 			debug(response.body().string());
 		} catch (IOException e1) {
 			e1.printStackTrace();
+		}
+	}
+
+	private void abort() {
+		webSocketClient.dispatcher().executorService().shutdown();
+	}
+
+	private void wait(int ms) {
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException e) {
+			debug("Error while waiting between messages: ");
+			e.printStackTrace(System.out);
+			abort();
 		}
 	}
 
