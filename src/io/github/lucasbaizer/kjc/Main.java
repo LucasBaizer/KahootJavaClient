@@ -1,4 +1,4 @@
-package it.kahoot;
+package io.github.lucasbaizer.kjc;
 
 public class Main {
 	public static void main(String[] args) {

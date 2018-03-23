@@ -1,4 +1,4 @@
-package it.kahoot;
+package io.github.lucasbaizer.kjc;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

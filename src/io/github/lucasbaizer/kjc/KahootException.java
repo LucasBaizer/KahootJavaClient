@@ -1,4 +1,4 @@
-package it.kahoot;
+package io.github.lucasbaizer.kjc;
 
 public class KahootException extends Exception {
 	private static final long serialVersionUID = -3846598801310911791L;
