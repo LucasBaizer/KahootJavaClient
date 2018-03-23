@@ -1,0 +1,41 @@
+{
+	"initialHandshake": {
+		"version": "1.0",
+		"minimumVersion": "1.0",
+		"channel": "/meta/handshake",
+		"supportedConnectionTypes": [
+			"websocket",
+			"long-polling"
+		],
+		"advice": {
+			"timeout": 60000,
+			"interval": 0
+		},
+		"ack": true
+	},
+	"subscribe": {
+		"channel": "/meta/subscribe",
+		"subscription": "-1"
+	},
+	"unsubscribe": {
+		"channel": "/meta/unsubscribe",
+		"subscription": "-1"
+	},
+	"connect": {
+		"channel": "/meta/connect",
+		"connectionType": "websocket",
+		"advice": {
+			"timeout": 0
+		},
+		"ack": -1
+	},
+	"login": {
+		"channel": "/service/controller",
+		"data": {
+			"type": "login",
+			"gameid": -1,
+			"host": "kahoot.it",
+			"name": "-1"
+		}
+	}
+}
