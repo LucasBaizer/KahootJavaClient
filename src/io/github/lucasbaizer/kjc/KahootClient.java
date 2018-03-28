@@ -1,6 +1,7 @@
 package io.github.lucasbaizer.kjc;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
@@ -58,6 +59,7 @@ public class KahootClient {
 		ScriptEngine engine = new NashornScriptEngineFactory().getScriptEngine("-strict", "--no-java",
 				"--no-syntax-extensions");
 		engine.put("this", null); // we don't "use" this, but give it a value to make not undefined
+		engine.put("console.log", (Consumer<String>) System.out::println);
 
 		String challengeResult;
 		try {
